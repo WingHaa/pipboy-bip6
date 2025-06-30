@@ -1,5 +1,6 @@
 import * as hmUI from "@zos/ui";
 import { getScene, SCENE_AOD } from "@zos/app";
+import { Calorie, HeartRate, Step } from "@zos/sensor";
 
 WatchFace({
   init_view() {
@@ -165,10 +166,8 @@ WatchFace({
     // show_level: hmUI.show_level.ONLY_NORMAL,
     // });
 
-    const calorie = hmSensor.createSensor(hmSensor.id.CALORIE);
-    calorie.addEventListener(hmSensor.event.CHANGE, function () {
-      scale_call();
-    });
+    const calorie = new Calorie();
+    calorie.onChange(scale_call);
 
     normal_calorie_current_text_img = hmUI.createWidget(hmUI.widget.TEXT_IMG, {
       x: 7,
@@ -209,10 +208,8 @@ WatchFace({
     // show_level: hmUI.show_level.ONLY_NORMAL,
     // });
 
-    const heart_rate = hmSensor.createSensor(hmSensor.id.HEART);
-    heart_rate.addEventListener(hmSensor.event.CHANGE, function () {
-      scale_call();
-    });
+    const heartRate = new HeartRate();
+    heartRate.onChange(scale_call);
 
     normal_heart_rate_text_text_img = hmUI.createWidget(hmUI.widget.TEXT_IMG, {
       x: 20,
@@ -286,10 +283,8 @@ WatchFace({
     // show_level: hmUI.show_level.ONLY_NORMAL,
     // });
 
-    const step = hmSensor.createSensor(hmSensor.id.STEP);
-    step.addEventListener(hmSensor.event.CHANGE, function () {
-      scale_call();
-    });
+    const step = new Step();
+    step.onChange(scale_call);
 
     normal_step_current_text_img = hmUI.createWidget(hmUI.widget.TEXT_IMG, {
       x: 179,
