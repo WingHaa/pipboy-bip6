@@ -12,7 +12,11 @@
     "vender": "zepp",
     "description": "Pipboy Watch Face for Bip6"
   },
-  "permissions": [],
+  "permissions": [
+   "data:user.hd.calorie",
+   "data:user.hd.heart_rate",
+   "data:user.hd.step"
+  ],
   "runtime": {
     "apiVersion": {
       "compatible": "2.0.0",
@@ -21,7 +25,7 @@
     }
   },
   "targets": {
-    "390x450-amazfit-gts-3": {
+    "390x450-amazfit-bip-6": {
       "module": {
         "watchface": {
           "path": "watchface/index",
@@ -33,12 +37,16 @@
       },
       "platforms": [
         {
-          "name": "Zurich",
-          "deviceSource": 224
+          "name": "Bip 6",
+          "deviceSource": 9765120
         },
         {
-          "name": "ZurichW",
-          "deviceSource": 225
+          "name": "Bip 6",
+          "deviceSource": 9765121
+        },
+        {
+          "name": "Bip 6",
+          "deviceSource": 10158337
         }
       ],
       "designWidth": 390
@@ -46,7 +54,7 @@
   },
   "i18n": {
     "en-US": {
-      "appName": "Empty"
+      "appName": "Pipboy-Bip6"
     }
   },
   "defaultLanguage": "en-US"
