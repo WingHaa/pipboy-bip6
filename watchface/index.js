@@ -1,3 +1,5 @@
+import * as hmUI from '@zos/ui'
+
 WatchFace({
   init_view() {
     //dynamic modify start
