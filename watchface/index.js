@@ -1,5 +1,5 @@
-import * as hmUI from '@zos/ui'
-import {getScene} from '@zos/app'
+import * as hmUI from "@zos/ui";
+import { getScene, SCENE_AOD } from "@zos/app";
 
 WatchFace({
   init_view() {
@@ -148,7 +148,7 @@ WatchFace({
     });
 
     let screenType = getScene();
-    if (screenType != hmSetting.screen_type.AOD) {
+    if (screenType != SCENE_AOD) {
       normal_calorie_linear_scale = hmUI.createWidget(hmUI.widget.FILL_RECT);
     }
 
@@ -192,7 +192,7 @@ WatchFace({
       show_level: hmUI.show_level.ONLY_NORMAL,
     });
 
-    if (screenType != hmSetting.screen_type.AOD) {
+    if (screenType != SCENE_AOD) {
       normal_heart_rate_linear_scale = hmUI.createWidget(hmUI.widget.FILL_RECT);
     }
 
@@ -269,7 +269,7 @@ WatchFace({
       show_level: hmUI.show_level.ONLY_NORMAL,
     });
 
-    if (screenType != hmSetting.screen_type.AOD) {
+    if (screenType != SCENE_AOD) {
       normal_step_linear_scale = hmUI.createWidget(hmUI.widget.FILL_RECT);
     }
 
@@ -779,7 +779,7 @@ WatchFace({
       if (progressCalories > 1) progressCalories = 1;
       let progress_ls_normal_calorie = progressCalories;
 
-      if (screenType != hmSetting.screen_type.AOD) {
+      if (screenType != SCENE_AOD) {
         // normal_calorie_linear_scale
         // initial parameters
         let start_x_normal_calorie = 67;
@@ -819,7 +819,7 @@ WatchFace({
       if (progressHeartRate > 1) progressHeartRate = 1;
       let progress_ls_normal_heart_rate = progressHeartRate;
 
-      if (screenType != hmSetting.screen_type.AOD) {
+      if (screenType != SCENE_AOD) {
         // normal_heart_rate_linear_scale
         // initial parameters
         let start_x_normal_heart_rate = 67;
@@ -859,7 +859,7 @@ WatchFace({
       if (progressStep > 1) progressStep = 1;
       let progress_ls_normal_step = progressStep;
 
-      if (screenType != hmSetting.screen_type.AOD) {
+      if (screenType != SCENE_AOD) {
         // normal_step_linear_scale
         // initial parameters
         let start_x_normal_step = 176;
