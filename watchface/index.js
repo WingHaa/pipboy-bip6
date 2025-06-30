@@ -1,4 +1,5 @@
 import * as hmUI from '@zos/ui'
+import {getScene} from '@zos/app'
 
 WatchFace({
   init_view() {
@@ -146,7 +147,7 @@ WatchFace({
       show_level: hmUI.show_level.ONLY_NORMAL,
     });
 
-    let screenType = hmSetting.getScreenType();
+    let screenType = getScene();
     if (screenType != hmSetting.screen_type.AOD) {
       normal_calorie_linear_scale = hmUI.createWidget(hmUI.widget.FILL_RECT);
     }
