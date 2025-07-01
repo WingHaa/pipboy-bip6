@@ -22,28 +22,139 @@ import {
   weekdays,
 } from "./asset.js";
 
-let pipBoyAnimation;
-let calorie;
-let heartRate;
-let step;
+/**
+ * @param {float} progressLsNormalCalorie
+ * @param {HmWearableProgram.DeviceSide.HmUI.IHmUIWidget} calorieWidget
+ */
+function calorieScale(progress, calorieWidget) {
+  const baseX = 67;
+  const baseY = 182;
+  const maxLength = 51;
+  const lineWidth = 6;
+  const color = 0xff00fe86;
+
+  let length = maxLength * progress;
+  let drawX = baseX;
+  let drawW = length;
+
+  if (length < 0) {
+    drawW = -length;
+    drawX = baseX - drawW;
+  }
+
+  calorieWidget.setProperty(prop.MORE, {
+    x: drawX,
+    y: baseY,
+    w: drawW,
+    h: lineWidth,
+    color,
+  });
+}
+
+/**
+ * @param {float} progressLsNormalHeartRate
+ * @param {HmWearableProgram.DeviceSide.HmUI.IHmUIWidget} heartRateWidget
+ */
+function heartRateScale(progress, heartRateWidget) {
+  const baseX = 67;
+  const baseY = 240;
+  const maxLength = 47;
+  const lineWidth = 8;
+  const color = 0xff63da81;
+
+  let length = maxLength * progress;
+  let drawX = baseX;
+  let drawW = length;
+
+  if (length < 0) {
+    drawW = -length;
+    drawX = baseX - drawW;
+  }
+
+  heartRateWidget.setProperty(prop.MORE, {
+    x: drawX,
+    y: baseY,
+    w: drawW,
+    h: lineWidth,
+    color,
+  });
+}
+
+/**
+ * @param {float} progressLsNormalStep
+ * @param {HmWearableProgram.DeviceSide.HmUI.IHmUIWidget} stepWidget
+ */
+function stepScale(progress, stepWidget) {
+  const startX = 176;
+  const startY = 369;
+  const totalLength = 69;
+  const lineWidth = 7;
+  const color = 0xff24db64;
+
+  progress = Math.max(-1, Math.min(1, progress));
+
+  const length = totalLength * Math.abs(progress);
+  const drawX = progress >= 0 ? startX : startX - length;
+
+  stepWidget.setProperty(prop.MORE, {
+    x: drawX,
+    y: startY,
+    w: length,
+    h: lineWidth,
+    color,
+  });
+}
+
+/** @type {import('@zos/sensor').Calorie} */
+let calorieSensor;
+/** @type {import('@zos/sensor').HeartRate} */
+let heartRateSensor;
+let maxHeartRate = 0;
+let restingHeartRate = 60;
+/** @type {import('@zos/sensor').Step} */
+let stepSensor;
 let normalCalorieLinearScale;
 let normalHeartRateLinearScale;
 let normalStepLinearScale;
 
-createWidget(widget.TEXT_IMG, {
-  x: 306,
-  y: 73,
-  font_array: numbers,
-  padding: false,
-  h_space: 0,
-  unit_sc: img("0023.png"),
-  unit_tc: img("0023.png"),
-  unit_en: img("0023.png"),
-  negative_image: img("0021.png"),
-  align_h: align.LEFT,
-  type: data_type.WEATHER_CURRENT,
-  show_level: show_level.ONLY_NORMAL,
-});
+function updateScale() {
+  if (screenType === SCENE_AOD) return;
+
+  // Calorie scale
+  if (calorieSensor && normalCalorieLinearScale) {
+    const progress = calorieSensor.getTarget()
+      ? Math.min(calorieSensor.getCurrent() / calorieSensor.getTarget(), 1)
+      : 0;
+    calorieScale(progress, normalCalorieLinearScale);
+  }
+
+  // Heart rate scale
+  if (heartRateSensor && normalHeartRateLinearScale) {
+    const currentHR = heartRateSensor.getLast();
+    const restingHR = heartRateSensor.getResting();
+
+    if (restingHR > 0) restingHeartRate = restingHR;
+
+    if (currentHR > maxHeartRate) {
+      maxHeartRate = currentHR;
+    }
+
+    const denominator = maxHeartRate - restingHeartRate;
+    let progress =
+      denominator > 0 ? (currentHR - restingHeartRate) / denominator : 0;
+
+    progress = Math.max(0, Math.min(1, progress));
+    heartRateScale(progress, normalHeartRateLinearScale);
+  }
+
+  // Step scale
+  if (stepSensor && normalStepLinearScale) {
+    const progress = stepSensor.getTarget()
+      ? Math.min(stepSensor.getCurrent() / stepSensor.getTarget(), 1)
+      : 0;
+    stepScale(progress, normalStepLinearScale);
+  }
+}
 
 function makeWatchFace() {
   createWidget(widget.IMG, {
@@ -55,7 +166,7 @@ function makeWatchFace() {
     show_level: show_level.ONLY_NORMAL,
   });
 
-  pipBoyAnimation = createWidget(widget.IMG_ANIM, {
+  const pipBoyAnimation = createWidget(widget.IMG_ANIM, {
     x: 157,
     y: 146,
     anim_path: "animation",
@@ -66,6 +177,21 @@ function makeWatchFace() {
     repeat_count: 0,
     anim_repeat: true,
     anim_status: anim_status.START,
+    show_level: show_level.ONLY_NORMAL,
+  });
+
+  createWidget(widget.TEXT_IMG, {
+    x: 306,
+    y: 73,
+    font_array: numbers,
+    padding: false,
+    h_space: 0,
+    unit_sc: img("0023.png"),
+    unit_tc: img("0023.png"),
+    unit_en: img("0023.png"),
+    negative_image: img("0021.png"),
+    align_h: align.LEFT,
+    type: data_type.WEATHER_CURRENT,
     show_level: show_level.ONLY_NORMAL,
   });
 
@@ -110,8 +236,8 @@ function makeWatchFace() {
     normalCalorieLinearScale = createWidget(widget.FILL_RECT);
   }
 
-  calorie = new Calorie();
-  calorie.onChange(scale);
+  calorieSensor = new Calorie();
+  calorieSensor.onChange(updateScale);
 
   createWidget(widget.TEXT_IMG, {
     x: 7,
@@ -128,8 +254,8 @@ function makeWatchFace() {
     normalHeartRateLinearScale = createWidget(widget.FILL_RECT);
   }
 
-  heartRate = new HeartRate();
-  heartRate.onLastChange(scale);
+  heartRateSensor = new HeartRate();
+  heartRateSensor.onLastChange(updateScale);
 
   createWidget(widget.TEXT_IMG, {
     x: 7,
@@ -168,8 +294,8 @@ function makeWatchFace() {
     normalStepLinearScale = createWidget(widget.FILL_RECT);
   }
 
-  step = new Step();
-  step.onChange(scale);
+  stepSensor = new Step();
+  stepSensor.onChange(updateScale);
 
   createWidget(widget.TEXT_IMG, {
     x: 179,
@@ -370,119 +496,9 @@ function makeWatchFace() {
     show_level: show_level.ONAL_AOD,
   });
 
-  function scale() {
-    const progress_ls_normal_calorie = Math.min(
-      calorie.getCurrent() / calorie.getTarget(),
-      1,
-    );
-
-    if (screenType != SCENE_AOD) {
-      // normal_calorie_linear_scale
-      // initial parameters
-      let start_x_normal_calorie = 67;
-      let start_y_normal_calorie = 182;
-      let lenght_ls_normal_calorie = 51;
-      let line_width_ls_normal_calorie = 6;
-      let color_ls_normal_calorie = 0xff00fe86;
-
-      // calculated parameters
-      let start_x_normal_calorie_draw = start_x_normal_calorie;
-      let start_y_normal_calorie_draw = start_y_normal_calorie;
-      lenght_ls_normal_calorie =
-        lenght_ls_normal_calorie * progress_ls_normal_calorie;
-      let lenght_ls_normal_calorie_draw = lenght_ls_normal_calorie;
-      let line_width_ls_normal_calorie_draw = line_width_ls_normal_calorie;
-      if (lenght_ls_normal_calorie < 0) {
-        lenght_ls_normal_calorie_draw = -lenght_ls_normal_calorie;
-        start_x_normal_calorie_draw =
-          start_x_normal_calorie - lenght_ls_normal_calorie_draw;
-      }
-
-      normalCalorieLinearScale.setProperty(prop.MORE, {
-        x: start_x_normal_calorie_draw,
-        y: start_y_normal_calorie_draw,
-        w: lenght_ls_normal_calorie_draw,
-        h: line_width_ls_normal_calorie_draw,
-        color: color_ls_normal_calorie,
-      });
-    }
-
-    let targetHeartRate = 179;
-    let progressHeartRate = (heartRate.getLast() - 71) / (targetHeartRate - 71);
-    progressHeartRate = Math.max(0, Math.min(1, progressHeartRate));
-    let progress_ls_normal_heart_rate = progressHeartRate;
-
-    if (screenType != SCENE_AOD) {
-      // normal_heart_rate_linear_scale
-      // initial parameters
-      let start_x_normal_heart_rate = 67;
-      let start_y_normal_heart_rate = 240;
-      let lenght_ls_normal_heart_rate = 47;
-      let line_width_ls_normal_heart_rate = 8;
-      let color_ls_normal_heart_rate = 0xff63da81;
-
-      // calculated parameters
-      let start_x_normal_heart_rate_draw = start_x_normal_heart_rate;
-      let start_y_normal_heart_rate_draw = start_y_normal_heart_rate;
-      lenght_ls_normal_heart_rate =
-        lenght_ls_normal_heart_rate * progress_ls_normal_heart_rate;
-      let lenght_ls_normal_heart_rate_draw = lenght_ls_normal_heart_rate;
-      let line_width_ls_normal_heart_rate_draw =
-        line_width_ls_normal_heart_rate;
-      if (lenght_ls_normal_heart_rate < 0) {
-        lenght_ls_normal_heart_rate_draw = -lenght_ls_normal_heart_rate;
-        start_x_normal_heart_rate_draw =
-          start_x_normal_heart_rate - lenght_ls_normal_heart_rate_draw;
-      }
-
-      normalHeartRateLinearScale.setProperty(prop.MORE, {
-        x: start_x_normal_heart_rate_draw,
-        y: start_y_normal_heart_rate_draw,
-        w: lenght_ls_normal_heart_rate_draw,
-        h: line_width_ls_normal_heart_rate_draw,
-        color: color_ls_normal_heart_rate,
-      });
-    }
-
-    const progress_ls_normal_step = Math.min(
-      step.getCurrent() / step.getTarget(),
-      1,
-    );
-
-    if (screenType != SCENE_AOD) {
-      // normal_step_linear_scale
-      // initial parameters
-      let start_x_normal_step = 176;
-      let start_y_normal_step = 369;
-      let lenght_ls_normal_step = 69;
-      let line_width_ls_normal_step = 7;
-      let color_ls_normal_step = 0xff24db64;
-
-      // calculated parameters
-      let start_x_normal_step_draw = start_x_normal_step;
-      let start_y_normal_step_draw = start_y_normal_step;
-      lenght_ls_normal_step = lenght_ls_normal_step * progress_ls_normal_step;
-      let lenght_ls_normal_step_draw = lenght_ls_normal_step;
-      let line_width_ls_normal_step_draw = line_width_ls_normal_step;
-      if (lenght_ls_normal_step < 0) {
-        lenght_ls_normal_step_draw = -lenght_ls_normal_step;
-        start_x_normal_step_draw =
-          start_x_normal_step - lenght_ls_normal_step_draw;
-      }
-
-      normalStepLinearScale.setProperty(prop.MORE, {
-        x: start_x_normal_step_draw,
-        y: start_y_normal_step_draw,
-        w: lenght_ls_normal_step_draw,
-        h: line_width_ls_normal_step_draw,
-        color: color_ls_normal_step,
-      });
-    }
-  }
-
   createWidget(widget.WIDGET_DELEGATE, {
     resume_call: function () {
-      scale();
+      updateScale();
       pipBoyAnimation.setProperty(prop.ANIM_STATUS, anim_status.START);
     },
     pause_call: function () {
@@ -514,8 +530,8 @@ WatchFace({
   },
 
   onDestroy() {
-    calorie.offChange();
-    heartRate.offLastChange();
-    step.offChange();
+    calorieSensor?.offChange();
+    heartRateSensor?.offLastChange();
+    stepSensor?.offChange();
   },
 });
