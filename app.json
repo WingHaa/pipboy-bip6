@@ -1,5 +1,5 @@
 {
-  "configVersion": "v2",
+  "configVersion": "v3",
   "app": {
     "appId": 25739,
     "appName": "Pipboy-Bip6",
